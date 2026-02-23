@@ -13,4 +13,9 @@
       <UniqueIdentifier>{76a71436-4e4f-47dd-9a9c-b4f31981c0e0}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="19532번 수학은 비대면강의입니다.cpp">
+      <Filter>소스파일</Filter>
+    </ClCompile>
+  </ItemGroup>
 </Project>
