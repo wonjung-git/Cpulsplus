@@ -2,116 +2,164 @@
 using namespace std;
 
 //비트 알려주는 함수
-char getbit(char data, char bitnum) {
-	bitnum--;
-	data = data & (1 << bitnum);
-	data = data >> bitnum;
-	return data;
+bool getbit(int input, int n) {
+	n--;
+	input = input & (1 << n);
+	input = input >> n;
+	return input;
 }
 
-//곱셈 규칙
-char operation(int m, char Q, bool Q_1) {
-	char result = 0;
-	if (getbit(Q, 2)) {
-		if (getbit(Q, 1)) {
-			if (Q_1) {
-				return 0;
-			}
-			else return -1*m;
+// 이진 덧셈 함수
+void sumbit(bool* A, int n) {
+	if (n < 8) {
+		if (A[n] == 0) A[n] = 1;
+		else {
+			A[n] = 0;
+			sumbit(A, n + 1);
 		}
-		else{
-			if (Q_1) {
-				return -1 * m;
+	}
+}
+
+// A레지스터에 M만큼 더해주는 함수
+void sum_Operation(bool* A, bool* M) {
+	bool r[8];
+	for (int i = 0; i < 8; i++) {
+		if (A[i] || M[i]) {
+			if (A[i] && M[i]) {
+				r[i] = 0;
+				sumbit(A, i + 1);
 			}
-			else return -2 * m;
+			else r[i] = 1;
+		}
+		else r[i] = 0;
+	}
+	for (int i = 0; i < 8; i++)
+		A[i] = r[i];
+
+}
+
+//Operation 계산 함수
+void Operation(bool* A, bool* M, bool* Q, bool Q_1) {
+	bool temp[8];
+	for (int i = 0; i < 8; i++)
+		temp[i] = M[i];
+
+	if (Q[1] == 0) {
+		if (Q[0] == 0) {
+			if (Q_1 == 1) sum_Operation(A, temp);
+		}
+		else {
+			if (Q_1 == 0) sum_Operation(A, temp);
+
+			else {
+				// M에 곱하기 2 해주기
+				for (int i = 6; i >= 0; i--)
+					temp[i + 1] = temp[i];
+				temp[0] = 0;
+				sum_Operation(A, temp);
+			}
 		}
 	}
 	else {
-		if (getbit(Q, 1)) {
-			if (Q_1) {
-				return 2*m;
+		if (Q[0] == 0) {
+			if (Q_1 == 0) {
+				// M에 곱하기 2 해주기
+				for (int i = 6; i >= 0; i--)
+					temp[i + 1] = temp[i];
+				temp[0] = 0;
+				// not연산
+				for (int i = 0; i < 8; i++)
+					temp[i] = !temp[i];
+				sumbit(temp, 0);
+				sum_Operation(A, temp);
 			}
-			else return m;
+			else {
+				// not연산
+				for (int i = 0; i < 8; i++)
+					temp[i] = !temp[i];
+				sumbit(temp, 0);
+				sum_Operation(A, temp);
+			}
 		}
 		else {
-			if (Q_1) {
-				return m;
+			if (Q_1 == 0) {
+				// not연산
+				for (int i = 0; i < 8; i++)
+					temp[i] = !temp[i];
+				sumbit(temp, 0);
+				sum_Operation(A, temp);
 			}
-			else return 0;
 		}
 	}
 }
 
-//shift해주는 함수
-void right_2_shift(char* A, char* Q, bool* Q_1) {
-	bool temp = getbit(*Q, 2);
-	if (temp) {
-		*Q_1 = 1;
-	}
-	else *Q_1 = 0;
+//레지스터 출력 함수
+void print_binary(bool* A, bool* Q, bool Q_1) {
+	for (int i = 8; i > 0; i--)
+		cout << A[i - 1];
+	cout << ' ';
 
-	*Q = *Q >> 2;
+	for (int i = 8; i > 0; i--)
+		cout << Q[i - 1];
+	cout << ' ';
 
-	temp = getbit(*A, 1);
-	if (temp) {
-		*Q = *Q | 64;
-	}
-	else *Q = *Q & 191;
-
-	temp = getbit(*A, 2);
-	if (temp) {
-		*Q = *Q | 128;
-	}
-	else *Q = *Q & 127;
-
-	*A = *A >> 2;
+	cout << Q_1 << endl;
 }
 
-//출력 함수
-void print_binary(char A, char Q, bool Q_1) {
-	bool temp;
-	for (int i = 8; i > 0; i--) {
-		temp = getbit(A, i);
-		cout << temp;
-	}
-	cout << ' ';
+void right_shift(bool* A, bool* Q, bool* Q_1) {
+	*Q_1 = Q[1];
+	for (int i = 2; i < 8; i++)
+		Q[i - 2] = Q[i];
+	Q[6] = A[0];
+	Q[7] = A[1];
 
-	for (int i = 8; i > 0; i--) {
-		temp = getbit(Q, i);
-		cout << temp;
+	for (int i = 2; i < 8; i++)
+		A[i - 2] = A[i];
+	if (A[7] == 0) {
+		A[6] = 0;
+		A[7] = 0;
 	}
-	cout << ' ';
-	temp = Q_1;
-	cout << temp << endl;
+	else {
+		A[6] = 1;
+		A[7] = 1;
+	}
 }
 
 int main() {
+	bool A[8], M[8], Q[8], Q_1 = 0;
 	int m, q;
+
+	//초기셋팅
+	for (int i = 0; i < 8; i++)
+		A[i] = 0;
 	cin >> m >> q;
-
-	char A, Q;
-	bool Q_1;
-	A = 0;
-	Q = q;
-	Q_1 = 0;
-
-	//초기 상태 출력
+	for (int i = 8; i > 0; i--)
+		Q[i - 1] = getbit(q, i);
+	for (int i = 8; i > 0; i--)
+		M[i - 1] = getbit(m, i);
 	print_binary(A, Q, Q_1);
 
-	//계산 과정
+	//Operation계산
 	for (int i = 0; i < 4; i++) {
-		A += operation(m, Q, Q_1);
-		right_2_shift(&A, &Q, &Q_1);
+		Operation(A, M, Q, Q_1);
+		right_shift(A, Q, &Q_1);
 		print_binary(A, Q, Q_1);
 	}
 
-	//최종 수 출력
-	int sum;
-	if (getbit(A, 8))
-		sum = A + Q + 1;
-	else sum = A + Q;
-
-	cout << sum;
+	//최종결과 출력
+	short result = 0;
+	int i = 0;
+	for (; i < 8; i++) {
+		if (Q[i]) {
+			result = result | (1 << i);
+		}
+	}
+	for (int j = 0; i < 16; i++, j++) {
+		if (A[j]) {
+			result = result | (1 << i);
+		}
+	}
+	cout << result;
 
 	return 0;
 }
