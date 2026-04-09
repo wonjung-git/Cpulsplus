@@ -60,4 +60,5 @@ int main() {
     }
     
     cout << amount->pay(m);
+    delete amount;
 }
