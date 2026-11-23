@@ -14,7 +14,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="19532번 수학은 비대면강의입니다.cpp">
+    <ClCompile Include="1193번 분수찾기.cpp">
       <Filter>소스파일</Filter>
     </ClCompile>
   </ItemGroup>
